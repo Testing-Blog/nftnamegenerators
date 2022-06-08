@@ -1,0 +1,167 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String?
+  providerAccountId String?
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id              String        @id @default(cuid())
+  name            String?
+  email           String?       @unique
+  password        String?
+  emailVerified   DateTime?
+  image           String?
+  metamaskAddress String?
+  role            String        @default("user")
+  accounts        Account[]
+  sessions        Session[]
+  Transaction     Transaction[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Plan {
+  id           String  @id @default(cuid())
+  price        Float   @unique
+  assetsNumber Float   @unique
+  features     String
+  watermark    Boolean @default(false)
+}
+
+model Transaction {
+  id      String  @id @default(cuid())
+  userId  String?
+  name    String
+  desc    String
+  size    Int
+  network String
+
+  paidAmount      Float
+  paymentMethod   String?
+  paymentCurrency String
+
+  dateCreated DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Settings {
+  id           String @id @default(cuid())
+  businessName String
+  currency     String @default("USD")
+
+  smtpEmail    String?
+  smtpPassword String?
+  smtpHost     String? @default("smtp.gmail.com")
+  smtpPort     String? @default("465")
+
+  githubId     String?
+  githubSecret String?
+  isGithub     Boolean @default(false)
+
+  googleId     String?
+  googleSecret String?
+  isGoogle     Boolean @default(false)
+
+  facebookId     String?
+  facebookSecret String?
+  isFacebook     Boolean @default(false)
+
+  isMetamaskAuth Boolean @default(false)
+
+  paypalClientId       String?
+  isPaypal             Boolean @default(false)
+  metamaskAddress      String?
+  isMetamask           Boolean @default(false)
+  stripePublishableKey String?
+  stripeSecretKey      String?
+  isStripe             Boolean @default(false)
+  razorpayPublicKey    String?
+  isRazorpay           Boolean @default(false)
+
+  watermarkText String? @default("watermark")
+
+  googleAnalyticsTrackingCode String?
+}
+
+// Pages
+model ContactPage {
+  id                 String @id @default(cuid())
+  subtitle           String @default("Contact us")
+  title              String @default("How can we help you?")
+  paragraph          String @default("Feel like getting in touch? Contact the customer support below.")
+  namePlaceholder    String @default("Your name")
+  emailPlaceholder   String @default("Your email")
+  messagePlaceholder String @default("Your message")
+  buttonText         String @default("Send a Message")
+}
+
+model PrivacyPage {
+  id      String @id @default(cuid())
+  title   String @default("Privacy Policy")
+  content String @db.VarChar(60000)
+}
+
+model TermsPage {
+  id      String @id @default(cuid())
+  title   String @default("Terms and Services")
+  content String @db.VarChar(60000)
+}
+
+model GeneratorPage {
+  id                 String @id @default(cuid())
+  downloadedFileName String @default("file")
+}
+
+model MetaTags {
+  id String @id @default(cuid())
+
+  ogType  String?
+  ogTitle String?
+  ogDesc  String?
+  ogUrl   String?
+
+  twitterTitle   String?
+  twitterDesc    String?
+  twitterSite    String?
+  twitterCreator String?
+
+  desc     String?
+  keywords String?
+}
